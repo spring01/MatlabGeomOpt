@@ -1,18 +1,24 @@
-function [hfEnergy, iter] = SCF(obj)
+function [hfEnergy, iter] = SCF(obj, iniDensMat)
 nbf = size(obj.overlapMat, 1);
+if(nargin < 2)
+    iniDensMat = zeros(nbf, nbf);
+end
 oeiVec = reshape(obj.coreHamilt, [], 1);
 inv_S_Half = eye(size(obj.overlapMat)) / sqrtm(obj.overlapMat);
 
-densVec = zeros(size(oeiVec));
+densVec = reshape(iniDensMat, [], 1);
 elecEnergy = 0;
 
 % diis adiis
 cdiis = CDIIS(obj.overlapMat);
 adiis = ADIIS(oeiVec);
 
-fockVec = oeiVec;
+iniGMat = 2 .* obj.jkFactory.JK_DensToJ(iniDensMat) ... % +2J
+    - obj.jkFactory.JK_DensToK(iniDensMat); % -K
+
+fockVec = oeiVec + reshape(iniGMat, [], 1);
 fockSimVec = fockVec;
-obj.jkFactory.JK_Initialize('PKJK');
+% obj.jkFactory.JK_Initialize('PKJK');
 for iter = 1:obj.maxSCFIter
     oldDensVec = densVec;
     oldElecEnergy = elecEnergy;
@@ -28,8 +34,8 @@ for iter = 1:obj.maxSCFIter
     end
     densMat = reshape(densVec, nbf, []);
     gMat = 2 .* obj.jkFactory.JK_DensToJ(densMat) ... % +2J
-        - obj.jkFactory.JK_DensToK(densMat);
-    fockVec = oeiVec + reshape(gMat, [], 1); ... % -K
+        - obj.jkFactory.JK_DensToK(densMat); % -K
+    fockVec = oeiVec + reshape(gMat, [], 1);
         
     % diis extropolate Fock matrix
     cdiis.Push(fockVec, densVec); % density must be idempotent
@@ -43,6 +49,7 @@ end
 hfEnergy = elecEnergy + obj.nucRepEnergy;
 
 obj.hfEnergy = hfEnergy;
+obj.densMat = reshape(densVec, nbf, []);
 
 end
 

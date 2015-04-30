@@ -5,9 +5,11 @@ classdef RHFGeomOpt < handle
         initialMol;
         finalMol;
         
+        rhf;
+        
     end
     
-    properties %(Access = protected)
+    properties (Access = protected)
         
         matpsi2;
         thresMaxForce = 0.000450
@@ -24,16 +26,17 @@ classdef RHFGeomOpt < handle
         function obj = RHFGeomOpt(molecule, basisName)
             obj.initialMol = molecule;
             obj.matpsi2 = MatPsi2(molecule.cartesian, basisName);
+            obj.rhf = RHF.MatPsi2Interface(obj.matpsi2);
         end
         
         function [currGeom, iter] = DoGeomOpt(obj)
+            [~, iterRHF] = obj.rhf.SCF();
+            disp(iterRHF)
             currGeom = obj.matpsi2.Molecule_Geometry();
             obj.matpsi2.SCF_RunRHF();
             forceVec = reshape(obj.matpsi2.SCF_Gradient(), [], 1);
-            currHess = diag(abs(forceVec));
+%             currHess = diag(abs(forceVec));
             for iter = 1:obj.maxIter
-                
-                
                 maxForce = max(abs(forceVec));
                 rmsForce = sqrt(forceVec' * forceVec ./ length(forceVec));
                 nextGeom = currGeom - obj.stepSize .* reshape(forceVec, [], 3);
@@ -49,13 +52,16 @@ classdef RHFGeomOpt < handle
                 end
                 obj.matpsi2.Molecule_SetGeometry(nextGeom);
                 obj.matpsi2.SCF_RunRHF();
+                prevDensMat = obj.rhf.densMat;
+                obj.rhf = RHF.MatPsi2Interface(obj.matpsi2);
+                [~, iterRHF] = obj.rhf.SCF(prevDensMat);
                 forceVec = reshape(obj.matpsi2.SCF_Gradient(), [], 1);
                 currGeom = nextGeom;
-                disp(iter)
-                disp(maxForce)
-                disp(rmsForce)
-                disp(maxDisplace)
-                disp(rmsDisplace)
+                disp(iterRHF)
+%                 disp(maxForce)
+%                 disp(rmsForce)
+%                 disp(maxDisplace)
+%                 disp(rmsDisplace)
             end
         end
         
