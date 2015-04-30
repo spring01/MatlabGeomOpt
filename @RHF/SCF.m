@@ -13,10 +13,7 @@ elecEnergy = 0;
 cdiis = CDIIS(obj.overlapMat);
 adiis = ADIIS(oeiVec);
 
-iniGMat = 2 .* obj.jkFactory.JK_DensToJ(iniDensMat) ... % +2J
-    - obj.jkFactory.JK_DensToK(iniDensMat); % -K
-
-fockVec = oeiVec + reshape(iniGMat, [], 1);
+fockVec = oeiVec + reshape(obj.DensToG(iniDensMat), [], 1);
 fockSimVec = fockVec;
 % obj.jkFactory.JK_Initialize('PKJK');
 for iter = 1:obj.maxSCFIter
@@ -32,10 +29,7 @@ for iter = 1:obj.maxSCFIter
             && abs(elecEnergy - oldElecEnergy) < obj.EnergyThreshold)
         break;
     end
-    densMat = reshape(densVec, nbf, []);
-    gMat = 2 .* obj.jkFactory.JK_DensToJ(densMat) ... % +2J
-        - obj.jkFactory.JK_DensToK(densMat); % -K
-    fockVec = oeiVec + reshape(gMat, [], 1);
+    fockVec = oeiVec + reshape(obj.DensToG(reshape(densVec, nbf, [])), [], 1);
         
     % diis extropolate Fock matrix
     cdiis.Push(fockVec, densVec); % density must be idempotent

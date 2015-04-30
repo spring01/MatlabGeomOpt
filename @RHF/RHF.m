@@ -4,9 +4,9 @@ classdef RHF < handle
         
         overlapMat;
         coreHamilt;
-        jkFactory
         nucRepEnergy;
         numElectrons;
+        matpsi2;
         
         hfEnergy;
         densMat;
@@ -27,7 +27,7 @@ classdef RHF < handle
         function obj = RHF(properties)
             obj.overlapMat = properties.overlapMat;
             obj.coreHamilt = properties.coreHamilt;
-            obj.jkFactory = properties.jkFactory;
+            obj.matpsi2 = properties.matpsi2;
             obj.nucRepEnergy = properties.nucRepEnergy;
             obj.numElectrons = properties.numElectrons;
         end
@@ -36,12 +36,21 @@ classdef RHF < handle
         
     end
     
+    methods (Access = protected)
+        
+        function gMat = DensToG(obj, densMat)
+            gMat = 2 .* obj.matpsi2.JK_DensToJ(densMat) ... % +2J
+                - obj.matpsi2.JK_DensToK(densMat); % -K
+        end
+        
+    end
+    
     methods (Static)
                 
         function rhf = MatPsi2Interface(matpsi2)
             properties.overlapMat = matpsi2.Integrals_Overlap();
             properties.coreHamilt = matpsi2.Integrals_Kinetic() + matpsi2.Integrals_Potential();
-            properties.jkFactory = matpsi2;
+            properties.matpsi2 = matpsi2;
             properties.nucRepEnergy = matpsi2.Molecule_NucRepEnergy();
             properties.numElectrons = matpsi2.Molecule_NumElectrons();
             rhf = RHF(properties);
