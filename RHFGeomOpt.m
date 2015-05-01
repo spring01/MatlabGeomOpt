@@ -34,12 +34,29 @@ classdef RHFGeomOpt < handle
             disp(iterRHF)
             currGeom = obj.matpsi2.Molecule_Geometry();
             obj.matpsi2.SCF_RunRHF();
-            forceVec = reshape(obj.matpsi2.SCF_Gradient(), [], 1);
-%             currHess = diag(abs(forceVec));
+            currForceVec = reshape(obj.matpsi2.SCF_Gradient(), [], 1);
+            currHess = eye(length(currForceVec));
             for iter = 1:obj.maxIter
-                maxForce = max(abs(forceVec));
-                rmsForce = sqrt(forceVec' * forceVec ./ length(forceVec));
-                nextGeom = currGeom - obj.stepSize .* reshape(forceVec, [], 3);
+                maxForce = max(abs(currForceVec));
+                rmsForce = sqrt(currForceVec' * currForceVec ./ length(currForceVec));
+                
+                nextGeom = currGeom - obj.stepSize .* reshape(currHess\currForceVec, [], 3);
+                
+                obj.matpsi2.Molecule_SetGeometry(nextGeom);
+                obj.matpsi2.SCF_RunRHF();
+                prevDensMat = obj.rhf.densMat;
+                obj.rhf = RHF.MatPsi2Interface(obj.matpsi2);
+                [~, iterRHF] = obj.rhf.SCF(prevDensMat);
+                nextForceVec = reshape(obj.matpsi2.SCF_Gradient(), [], 1);
+                
+                
+                deltaForceVec = nextForceVec - currForceVec;
+                deltaGeomVec = reshape(nextGeom - currGeom, [], 1);
+                temp = deltaGeomVec'*currHess;
+                nextHess = currHess ...
+                    + (deltaForceVec*deltaForceVec')./(deltaForceVec'*deltaGeomVec) ...
+                    - (temp'*temp)./(deltaGeomVec'*currHess*deltaGeomVec);
+                
                 displaceVec = reshape(nextGeom - currGeom, [], 1);
                 maxDisplace = max(abs(displaceVec));
                 rmsDisplace = sqrt(displaceVec' * displaceVec ./ length(displaceVec));
@@ -50,13 +67,10 @@ classdef RHFGeomOpt < handle
                     obj.finalMol = Molecule([obj.initialMol(:,1), currGeom.*obj.initialMol.Bohr2Angstrom]);
                     break;
                 end
-                obj.matpsi2.Molecule_SetGeometry(nextGeom);
-                obj.matpsi2.SCF_RunRHF();
-                prevDensMat = obj.rhf.densMat;
-                obj.rhf = RHF.MatPsi2Interface(obj.matpsi2);
-                [~, iterRHF] = obj.rhf.SCF(prevDensMat);
-                forceVec = reshape(obj.matpsi2.SCF_Gradient(), [], 1);
                 currGeom = nextGeom;
+                currForceVec = nextForceVec;
+                currHess = nextHess;
+                
                 disp(iterRHF)
 %                 disp(maxForce)
 %                 disp(rmsForce)
