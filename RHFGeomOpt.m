@@ -17,7 +17,7 @@ classdef RHFGeomOpt < handle
         thresMaxDisplace = 0.001800;
         thresRMSDisplace = 0.001200;
         maxIter = 500;
-        stepSize = 1.5;
+        stepSize = 1;
         
     end
     
@@ -33,7 +33,7 @@ classdef RHFGeomOpt < handle
             [~, iterRHF] = obj.rhf.SCF();
             disp(iterRHF)
             currGeom = obj.matpsi2.Molecule_Geometry();
-            obj.matpsi2.SCF_RunRHF();
+            obj.matpsi2.SCF_RunSCF();
             currForceVec = reshape(obj.matpsi2.SCF_Gradient(), [], 1);
             currHess = eye(length(currForceVec));
             for iter = 1:obj.maxIter
@@ -43,10 +43,12 @@ classdef RHFGeomOpt < handle
                 nextGeom = currGeom - obj.stepSize .* reshape(currHess\currForceVec, [], 3);
                 
                 obj.matpsi2.Molecule_SetGeometry(nextGeom);
-                obj.matpsi2.SCF_RunRHF();
-                prevDensMat = obj.rhf.densMat;
+                
+                prevOrbital = obj.rhf.orbital;
                 obj.rhf = RHF.MatPsi2Interface(obj.matpsi2);
-                [~, iterRHF] = obj.rhf.SCF(prevDensMat);
+                [~, iterRHF] = obj.rhf.SCF(prevOrbital);
+                obj.matpsi2.SCF_SetGuessOrb(prevOrbital);
+                obj.matpsi2.SCF_RunSCF();
                 nextForceVec = reshape(obj.matpsi2.SCF_Gradient(), [], 1);
                 
                 
@@ -64,7 +66,7 @@ classdef RHFGeomOpt < handle
                         && rmsForce < obj.thresRMSForce ...
                         && maxDisplace < obj.thresMaxDisplace ...
                         && rmsDisplace < obj.thresRMSDisplace)
-                    obj.finalMol = Molecule([obj.initialMol(:,1), currGeom.*obj.initialMol.Bohr2Angstrom]);
+                    obj.finalMol = Molecule([obj.initialMol.cartesian(:,1), nextGeom.*obj.initialMol.Bohr2Angstrom]);
                     break;
                 end
                 currGeom = nextGeom;
@@ -72,10 +74,10 @@ classdef RHFGeomOpt < handle
                 currHess = nextHess;
                 
                 disp(iterRHF)
-%                 disp(maxForce)
-%                 disp(rmsForce)
-%                 disp(maxDisplace)
-%                 disp(rmsDisplace)
+                disp(maxForce)
+                disp(rmsForce)
+                disp(maxDisplace)
+                disp(rmsDisplace)
             end
         end
         

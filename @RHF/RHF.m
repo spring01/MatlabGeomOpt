@@ -9,7 +9,7 @@ classdef RHF < handle
         matpsi2;
         
         hfEnergy;
-        densMat;
+        orbital;
         
     end
     
@@ -32,7 +32,7 @@ classdef RHF < handle
             obj.numElectrons = properties.numElectrons;
         end
         
-        [hfEnergy, iter] = SCF(obj, iniDensMat)
+        [hfEnergy, iter] = SCF(obj, iniOrbital)
         
     end
     
