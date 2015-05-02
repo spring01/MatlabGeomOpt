@@ -29,7 +29,7 @@ classdef RHFGeomOpt < handle
             obj.rhf = RHF.MatPsi2Interface(obj.matpsi2);
         end
         
-        function [currGeom, iter] = DoGeomOpt(obj)
+        function [currGeom, iter] = RunGeomOpt(obj)
             [~, iterRHF] = obj.rhf.SCF();
             disp(iterRHF)
             currGeom = obj.matpsi2.Molecule_Geometry();
