@@ -7,22 +7,29 @@ oeiVec = reshape(obj.coreHamilt, [], 1);
 inv_S_Half = eye(size(obj.overlapMat)) / sqrtm(obj.overlapMat);
 
 occOrb = iniOrbital(:, 1:obj.numElectrons/2);
-densMat = occOrb * occOrb';
-densVec = reshape(densMat, [], 1);
+densVec = reshape(occOrb * occOrb', [], 1);
 elecEnergy = 0;
-
-fockSimVec = oeiVec + reshape(obj.DensToG(densMat), [], 1);
 
 % diis adiis
 cdiis = CDIIS(obj.overlapMat);
-adiis = ADIIS(fockSimVec);
+adiis = ADIIS(oeiVec);
 
-% obj.jkFactory.JK_Initialize('PKJK');
 for iter = 1:obj.maxSCFIter
+    fockVec = oeiVec + reshape(obj.DensToG(reshape(densVec, nbf, [])), [], 1);
+        
+    % diis extrapolate Fock matrix
+    cdiis.Push(fockVec, densVec); % density must be idempotent
+    if(cdiis.IAmBetter())
+        fockVec = cdiis.Extrapolate();
+    else
+        adiis.Push(fockVec, densVec); % Fock must be built from idempotent density
+        fockVec = adiis.Interpolate();
+    end
+    
     oldDensVec = densVec;
     oldElecEnergy = elecEnergy;
     [densVec, elecEnergy, orbital] ...
-        = DiagonalizeFock(reshape(fockSimVec, nbf, []), ...
+        = DiagonalizeFock(reshape(fockVec, nbf, []), ...
         inv_S_Half, obj.numElectrons);
     elecEnergy = oeiVec'*densVec + elecEnergy;
     
@@ -30,16 +37,6 @@ for iter = 1:obj.maxSCFIter
             && max(abs(densVec - oldDensVec)) < obj.MaxDensityThreshold ...
             && abs(elecEnergy - oldElecEnergy) < obj.EnergyThreshold)
         break;
-    end
-    fockVec = oeiVec + reshape(obj.DensToG(reshape(densVec, nbf, [])), [], 1);
-        
-    % diis extrapolate Fock matrix
-    cdiis.Push(fockVec, densVec); % density must be idempotent
-    if(cdiis.IAmBetter())
-        fockSimVec = cdiis.Extrapolate();
-    else
-        adiis.Push(fockVec, densVec); % Fock must be built from idempotent density
-        fockSimVec = adiis.Interpolate();
     end
 end
 hfEnergy = elecEnergy + obj.nucRepEnergy;
