@@ -17,7 +17,7 @@ classdef RHFGeomOpt < handle
         thresMaxDisplace = 0.001800;
         thresRMSDisplace = 0.001200;
         maxIter = 500;
-        stepSize = 1;
+        stepSize = 1.5;
         
     end
     
@@ -65,6 +65,7 @@ classdef RHFGeomOpt < handle
                 maxDisplace = max(abs(displaceVec));
                 rmsDisplace = sqrt(mean(displaceVec.^2));
                 
+                disp(iter)
                 disp(iterRHF)
                 disp(maxForce)
                 disp(rmsForce)
