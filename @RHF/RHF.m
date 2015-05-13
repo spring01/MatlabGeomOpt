@@ -2,18 +2,18 @@ classdef RHF < handle
     
     properties (SetAccess = protected)
         
+        orbital;
+        densVec;
+        
+    end
+    
+    properties (Access = protected)
+        
         overlapMat;
         coreHamilt;
         nucRepEnergy;
         numElectrons;
         matpsi2;
-        
-        hfEnergy;
-        orbital;
-        
-    end
-    
-    properties (Access = protected)
         
         maxSCFIter = 500;
         RMSDensityThreshold = 1e-8;
@@ -32,7 +32,8 @@ classdef RHF < handle
             obj.numElectrons = properties.numElectrons;
         end
         
-        [hfEnergy, iter] = SCF(obj, iniOrbital)
+        [hfEnergy, iter] = SCF(obj, iniDensVec)
+        [hfEnergy, collectionDensVec, iter] = ExpertSCF(obj, iniDensVec)
         
     end
     

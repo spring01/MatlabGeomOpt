@@ -44,9 +44,9 @@ classdef RHFGeomOpt < handle
                 
                 % SCF and gradient of next geometry
                 obj.matpsi2.Molecule_SetGeometry(nextGeom);
-                prevOrbital = obj.rhf.orbital;
+                prevDensVec = obj.rhf.densVec;
                 obj.rhf = RHF.MatPsi2Interface(obj.matpsi2);
-                [~, iterRHF] = obj.rhf.SCF(prevOrbital);
+                [~, iterRHF] = obj.rhf.SCF(prevDensVec);
                 obj.matpsi2.SCF_SetGuessOrb(obj.rhf.orbital);
                 obj.matpsi2.SCF_RunSCF();
                 nextForceVec = reshape(obj.matpsi2.SCF_Gradient(), [], 1);

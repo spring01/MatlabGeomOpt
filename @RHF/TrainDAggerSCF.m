@@ -1,4 +1,14 @@
-function [hfEnergy, iter] = SCF(obj, iniDensVec)
+function [hfEnergy, coeffs, iter] = TrainDAggerSCF(obj, iniDensVec, collectionDensVec)
+
+% keep only the densities we essentially use
+stepSize = 2;
+finalDensVec = collectionDensVec(:,end);
+numDensVectors = size(collectionDensVec, 2);
+collectionDensVec = collectionDensVec(:,1:stepSize:end);
+if(mod(numDensVectors, 2))
+    collectionDensVec = [collectionDensVec, finalDensVec];
+end
+
 nbf = size(obj.overlapMat, 1);
 if(nargin < 2)
     iniDensVec = zeros(nbf^2, 1);
@@ -13,17 +23,16 @@ elecEnergy = 0;
 cdiis = CDIIS(obj.overlapMat);
 adiis = ADIIS(oeiVec);
 
-for iter = 1:obj.maxSCFIter
-    fockVec = oeiVec + reshape(obj.DensToG(reshape(densVec, nbf, [])), [], 1);
-        
-    % diis extrapolate Fock matrix
-    cdiis.Push(fockVec, densVec); % density must be idempotent
-    if(cdiis.IAmBetter())
-        fockVec = cdiis.Extrapolate();
-    else
-        adiis.Push(fockVec, densVec); % Fock must be built from idempotent density
-        fockVec = adiis.Interpolate();
+for iter = 1:size(collectionDensVec, 2)
+    
+    % linear regression: rho_exp_{i-4}, ... , rho_exp_{i-1}, rho_exp_{i} -> rho_exp_{i+1} => rho_tr_i+1
+    % linear regression: rho_exp_{i-4}, ... , rho_exp_{i-1}, rho_tr_{i} -> rho_exp_{i+1} => rho_tr2_i+1
+    % linear regression: rho_exp_{i-4}, ... , rho_tr_{i-1}, rho_tr2_{i} -> rho_exp_{i+1} => rho_tr3_i+1
+    for daggerIter = 1:iter-1
     end
+    
+    fockVec = oeiVec + reshape(obj.DensToG(reshape(densVec, nbf, [])), [], 1);
+    
     
     oldDensVec = densVec;
     oldElecEnergy = elecEnergy;

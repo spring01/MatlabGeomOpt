@@ -1,4 +1,4 @@
-function [hfEnergy, iter] = SCF(obj, iniDensVec)
+function [hfEnergy, collectionDensVec, iter] = ExpertSCF(obj, iniDensVec)
 nbf = size(obj.overlapMat, 1);
 if(nargin < 2)
     iniDensVec = zeros(nbf^2, 1);
@@ -13,9 +13,11 @@ elecEnergy = 0;
 cdiis = CDIIS(obj.overlapMat);
 adiis = ADIIS(oeiVec);
 
+collectionDensVec = zeros(nbf^2, 0);
+
 for iter = 1:obj.maxSCFIter
     fockVec = oeiVec + reshape(obj.DensToG(reshape(densVec, nbf, [])), [], 1);
-        
+    
     % diis extrapolate Fock matrix
     cdiis.Push(fockVec, densVec); % density must be idempotent
     if(cdiis.IAmBetter())
@@ -31,6 +33,9 @@ for iter = 1:obj.maxSCFIter
         = DiagonalizeFock(reshape(fockVec, nbf, []), ...
         inv_S_Half, obj.numElectrons);
     elecEnergy = oeiVec'*densVec + elecEnergy;
+    
+    % collection of densities
+    collectionDensVec(:, iter) = densVec;
     
     if(sqrt(mean((densVec - oldDensVec).^2)) < obj.RMSDensityThreshold ...
             && max(abs(densVec - oldDensVec)) < obj.MaxDensityThreshold ...
