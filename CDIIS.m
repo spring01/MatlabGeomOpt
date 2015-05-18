@@ -7,7 +7,9 @@ classdef CDIIS < handle
         
         S_Half;
         
-        startError = 1;
+        startError = 0.1;
+        
+        densVectors;
         
     end
     
@@ -21,6 +23,10 @@ classdef CDIIS < handle
             obj.errorCommutatorVectors = zeros(numel(overlapMatrix), numVectors);
             
             obj.S_Half = sqrtm(overlapMatrix);
+            
+            % 
+            obj.densVectors = zeros(numel(overlapMatrix), numVectors);
+            %
         end
         
         function Push(obj, newFockVector, newDensVector)
@@ -31,6 +37,11 @@ classdef CDIIS < handle
             % push new Fock in
             obj.fockVectors(:, 1:end-1) = obj.fockVectors(:, 2:end);
             obj.fockVectors(:, end) = newFockVector;
+            
+            %
+            obj.densVectors(:, 1:end-1) = obj.densVectors(:, 2:end);
+            obj.densVectors(:, end) = newDensVector;
+            %
             
             % push new commutator error in
             obj.errorCommutatorVectors(:, 1:end-1) = obj.errorCommutatorVectors(:, 2:end);
@@ -51,24 +62,50 @@ classdef CDIIS < handle
             end
         end
         
-        function newFockVector = Extrapolate(obj)
+%         function newFockVector = Extrapolate(obj)
+%             onesVec = ones(obj.NumVectors(),1);
+%             hessian = [ ...
+%                 obj.errorCommutatorVectors'*obj.errorCommutatorVectors, onesVec; ...
+%                 onesVec', 0];
+%             useFockIndices = 1:obj.NumVectors();
+%             for i = 1:obj.NumVectors()-1
+%                 if(rcond(hessian) > 1e-15)
+%                     break;
+%                 else
+%                     hessian = hessian(2:end, 2:end);
+%                     useFockIndices = useFockIndices(2:end);
+%                 end
+%             end
+%             diisCoefficients = hessian \ [zeros(length(useFockIndices),1); 1];
+%             newFockVector = obj.fockVectors(:,useFockIndices) ...
+%                 * diisCoefficients(1:end-1);
+%         end
+        
+        %
+        function newDensVector = ExtrapolateDensity(obj)
             onesVec = ones(obj.NumVectors(),1);
             hessian = [ ...
                 obj.errorCommutatorVectors'*obj.errorCommutatorVectors, onesVec; ...
                 onesVec', 0];
-            useFockIndices = 1:obj.NumVectors();
+            useIndices = 1:obj.NumVectors();
             for i = 1:obj.NumVectors()-1
-                if(rcond(hessian) > 1e-15)
-                    break;
+                if(rcond(hessian(1:end-1,1:end-1)) > 1e-15 && rcond(hessian) > 1e-15)
+%                     break;
+                    diisCoefficients = hessian \ [zeros(length(useIndices),1); 1];
+                    newDensVector = obj.densVectors(:,useIndices) ...
+                        * diisCoefficients(1:end-1);
+                    return;
                 else
                     hessian = hessian(2:end, 2:end);
-                    useFockIndices = useFockIndices(2:end);
+                    useIndices = useIndices(2:end);
                 end
             end
-            diisCoefficients = hessian \ [zeros(length(useFockIndices),1); 1];
-            newFockVector = obj.fockVectors(:,useFockIndices) ...
-                * diisCoefficients(1:end-1);
+            newDensVector = obj.densVectors(:,end);
+%             diisCoefficients = hessian \ [zeros(length(useIndices),1); 1];
+%             newDensVector = obj.densVectors(:,useIndices) ...
+%                 * diisCoefficients(1:end-1);
         end
+        %
         
     end
     

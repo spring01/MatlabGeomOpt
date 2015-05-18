@@ -7,6 +7,8 @@ classdef RHFGeomOpt < handle
         
         rhf;
         
+        currMol;
+        
     end
     
     properties (Access = protected)
@@ -83,6 +85,8 @@ classdef RHFGeomOpt < handle
                 % start from next geometry
                 currGeom = nextGeom;
                 currForceVec = nextForceVec;
+                
+                obj.currMol = Molecule([obj.initialMol.cartesian(:,1), nextGeom.*obj.initialMol.Bohr2Angstrom]);
             end
         end
         

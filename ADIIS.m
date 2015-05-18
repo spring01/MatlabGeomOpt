@@ -31,7 +31,27 @@ classdef ADIIS < handle
             obj.densVectors(:, end) = newDensVector;
         end
         
-        function newFockVector = Interpolate(obj)
+%         function newFockVector = Interpolate(obj)
+%             % compute errors wrt. the latest Fock or density
+%             errorFockVectors = obj.fockVectors - ...
+%                 repmat(obj.fockVectors(:,end), 1, obj.NumVectors);
+%             errorDensVectors = obj.densVectors - ...
+%                 repmat(obj.densVectors(:,end), 1, obj.NumVectors);
+%             
+%             % first order term and Hessian
+%             firstOrder = 2.*(obj.fockVectors(:, end)'*errorDensVectors)';
+%             hessian = errorFockVectors'*errorDensVectors;
+%             hessian = hessian + hessian'; % multiply Hessian by 2 and cancels numerical error
+%             
+%             % reduced gradient
+%             coeffs = obj.ReducedGradient( ...
+%                 hessian, firstOrder, [zeros(obj.NumVectors()-1,1); 1]);
+%             
+%             newFockVector = obj.fockVectors * coeffs;
+%         end
+        
+        %
+        function newDensVector = InterpolateDensity(obj)
             % compute errors wrt. the latest Fock or density
             errorFockVectors = obj.fockVectors - ...
                 repmat(obj.fockVectors(:,end), 1, obj.NumVectors);
@@ -47,8 +67,9 @@ classdef ADIIS < handle
             coeffs = obj.ReducedGradient( ...
                 hessian, firstOrder, [zeros(obj.NumVectors()-1,1); 1]);
             
-            newFockVector = obj.fockVectors * coeffs;
+            newDensVector = obj.densVectors * coeffs;
         end
+        %
         
     end
     

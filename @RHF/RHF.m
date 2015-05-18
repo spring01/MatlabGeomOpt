@@ -5,6 +5,8 @@ classdef RHF < handle
         orbital;
         densVec;
         
+        finalFockVec;
+        
     end
     
     properties (Access = protected)
@@ -32,9 +34,6 @@ classdef RHF < handle
             obj.numElectrons = properties.numElectrons;
         end
         
-        [hfEnergy, iter] = SCF(obj, iniDensVec)
-        [hfEnergy, collectionDensVec, iter] = ExpertSCF(obj, iniDensVec)
-        
     end
     
     methods (Access = protected)
@@ -42,6 +41,16 @@ classdef RHF < handle
         function gMat = DensToG(obj, densMat)
             gMat = 2 .* obj.matpsi2.JK_DensToJ(densMat) ... % +2J
                 - obj.matpsi2.JK_DensToK(densMat); % -K
+        end
+        
+        function [densVec, elecEnergy, orbital, orbEigValues] ...
+                = DiagonalizeFock(obj, fockMat, inv_S_Half)
+            [orbitalOtho, orbEigValues] = eig(inv_S_Half*fockMat*inv_S_Half);
+            [orbEigValues, ascend_order] = sort(diag(orbEigValues));
+            orbital = inv_S_Half * orbitalOtho(:, ascend_order);
+            occOrb = orbital(:, 1:obj.numElectrons/2);
+            densVec = reshape(occOrb * occOrb', [], 1);
+            elecEnergy = sum(orbEigValues(1:obj.numElectrons/2));
         end
         
     end
