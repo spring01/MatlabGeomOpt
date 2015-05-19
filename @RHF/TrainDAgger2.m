@@ -19,10 +19,10 @@ refDensVecSet = refDensVecSet(:, 1:stepSize:end);
 
 trainedLevels = {};
 % maxLevel = size(refDensVecSet, 2) - 1;
-maxLevel = 4;
+maxLevel = 7;
 for level = 1:maxLevel
     trainedLevels{level}.coeffs = {};
-    trainedLevels{level}.densVecSet = zeros(size(densVecSet(:, 1:1+level)));
+    trainedLevels{level}.densVecSet = zeros(size(densVecSet, 1), 0);
 end
 
 for iter = 2:size(refDensVecSet, 2)
@@ -39,8 +39,8 @@ for iter = 2:size(refDensVecSet, 2)
     
     for daggerLevel = 1:min(iter - 1, maxLevel)
         newDensVecSubset = densVecSubset;
-        for replaceLevel = daggerLevel-1:-1:1
-            newDensVecSubset(:, end - replaceLevel + 1) = trainedLevels{replaceLevel}.densVecSet(:, iter - replaceLevel + 1);
+        for replaceLevel = 1:daggerLevel-1
+            newDensVecSubset(:, end + replaceLevel - daggerLevel + 1) = trainedLevels{replaceLevel}.densVecSet(:, iter + replaceLevel - daggerLevel + 1);
         end
         [trainedLevels{daggerLevel}.coeffs{iter}, densVecSim] = ConstrLinReg(newDensVecSubset, refDensVec);
         fockVecSim = oeiVec + reshape(obj.DensToG(reshape(densVecSim, nbf, [])), [], 1);
