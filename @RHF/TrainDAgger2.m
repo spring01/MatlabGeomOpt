@@ -1,4 +1,4 @@
-function finalCoeffs = TrainDAgger2(obj, densVecSet, refDensVecSet)
+function trainedLevels = TrainDAgger2(obj, densVecSet, refDensVecSet)
 nbf = size(obj.overlapMat, 1);
 oeiVec = reshape(obj.coreHamilt, [], 1);
 inv_S_Half = eye(size(obj.overlapMat)) / sqrtm(obj.overlapMat);
@@ -50,10 +50,8 @@ for iter = 2:size(refDensVecSet, 2)
         trainedLevels{daggerLevel}.densVecSet(:, iter+1) = solvedDensVec;
     end
     
-    disp('one iter')
+%     disp('one iter')
 end
-
-finalCoeffs = trainedLevels;
 
 end
 
@@ -64,8 +62,8 @@ diisCoeffs = hessian \ [densVecSubset'*refDensVec; 1];
 predDensVector = densVecSubset * diisCoeffs(1:end-1);
 diisCoeffs = diisCoeffs(1:end-1);
 
-disp(norm(predDensVector - refDensVec));
-disp(norm(densVecSubset(:,end) - refDensVec));
-disp('one level')
+% disp(norm(predDensVector - refDensVec));
+% disp(norm(densVecSubset(:,end) - refDensVec));
+% disp('one level')
 end
 
