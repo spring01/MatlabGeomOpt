@@ -1,6 +1,6 @@
 load geomOptMolsBig.mat
 
-basisSet = 'sto-3g';
+basisSet = '6-31g';
 
 molIni = mol1;
 matpsiIni = MatPsi2(molIni.cartesian, basisSet);
