@@ -1,4 +1,7 @@
 function finalCoeffs = TrainDAgger2(obj, densVecSet, refDensVecSet)
+nbf = size(obj.overlapMat, 1);
+oeiVec = reshape(obj.coreHamilt, [], 1);
+inv_S_Half = eye(size(obj.overlapMat)) / sqrtm(obj.overlapMat);
 
 % keep only the densities we essentially use
 stepSize = 2;
@@ -16,10 +19,10 @@ refDensVecSet = refDensVecSet(:, 1:stepSize:end);
 
 trainedLevels = {};
 % maxLevel = size(refDensVecSet, 2) - 1;
-maxLevel = 4;
+maxLevel = 3;
 for level = 1:maxLevel
     trainedLevels{level}.coeffs = {};
-    trainedLevels{level}.densVecSet = zeros(size(densVecSet(:, 1:1+level)));
+    trainedLevels{level}.densVecSet = zeros(size(densVecSet(:, 1:2+level)));
 end
 
 for iter = 2:size(refDensVecSet, 2)
@@ -28,21 +31,31 @@ for iter = 2:size(refDensVecSet, 2)
     % linear regression: rho_exp_{i-4}, ... , rho_exp_{i-1}, rho_tr_{i} -> rho_exp_{i+1} => rho_tr2_i+1
     % linear regression: rho_exp_{i-4}, ... , rho_tr_{i-1}, rho_tr2_{i} -> rho_exp_{i+1} => rho_tr3_i+1
     
-    useIndices = iter-4:iter;
+    useIndices = iter-8:iter;
     useIndices = useIndices(useIndices > 0);
     densVecSubset = densVecSet(:,useIndices);
     refDensVec = refDensVecSet(:,iter);
     
-    [trainedLevels{1}.coeffs{iter}, trainedLevels{1}.densVecSet(:, iter)] = ConstrLinReg(densVecSubset, refDensVec);
+    [trainedLevels{1}.coeffs{iter}, densVecSim] = ConstrLinReg(densVecSubset, refDensVec);
+    fockVecSim = oeiVec + reshape(obj.DensToG(reshape(densVecSim, nbf, [])), [], 1);
+    [solvedDensVec, ~, ~] ...
+        = obj.DiagonalizeFock(reshape(fockVecSim, nbf, []), ...
+        inv_S_Half);
+    trainedLevels{1}.densVecSet(:, iter+1) = solvedDensVec;
 %     [tr1Coeffs{iter}, tr1DensVecSet(:, iter)] = ConstrLinReg(densVecSubset, refDensVec);
     
     newDensVecSubset = densVecSubset;
     for daggerLevel = 2:min(iter - 1, maxLevel)
         newDensVecSubset(:, end - daggerLevel + 2) = trainedLevels{daggerLevel - 1}.densVecSet(:, iter - daggerLevel + 2);
-        [trainedLevels{daggerLevel}.coeffs{iter}, trainedLevels{daggerLevel}.densVecSet(:, iter)] = ConstrLinReg(newDensVecSubset, refDensVec);
+        [trainedLevels{daggerLevel}.coeffs{iter}, densVecSim] = ConstrLinReg(newDensVecSubset, refDensVec);
+        fockVecSim = oeiVec + reshape(obj.DensToG(reshape(densVecSim, nbf, [])), [], 1);
+        [solvedDensVec, ~, ~] ...
+            = obj.DiagonalizeFock(reshape(fockVecSim, nbf, []), ...
+            inv_S_Half);
+        trainedLevels{daggerLevel}.densVecSet(:, iter+1) = solvedDensVec;
     end
     
-    
+    disp('one iter')
 end
 
 finalCoeffs = trainedLevels;
@@ -56,7 +69,8 @@ diisCoeffs = hessian \ [densVecSubset'*refDensVec; 1];
 predDensVector = densVecSubset * diisCoeffs(1:end-1);
 diisCoeffs = diisCoeffs(1:end-1);
 
-% disp(norm(predDensVector - refDensVec));
-% disp(norm(densVecSubset(:,end) - refDensVec));
+disp(norm(predDensVector - refDensVec));
+disp(norm(densVecSubset(:,end) - refDensVec));
+disp('one level')
 end
 
