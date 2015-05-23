@@ -37,7 +37,7 @@ end
 iniCoeffs = [0 0 0 0 1]';
 % iniCoeffs = iniCoeffs ./ norm(iniCoeffs);
 
-options = optimoptions(@fmincon, 'Display', 'iter', 'GradObj', 'off');
+options = optimoptions(@fmincon, 'Display', 'iter', 'GradObj', 'on');
 finalCoeffs = fmincon(@(coeffs)Target(coeffs, H), ...
     iniCoeffs, [], [], ones(1, length(iniCoeffs)), 1, [], [], [], options);
 

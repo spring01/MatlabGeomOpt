@@ -36,7 +36,7 @@ classdef ComDIIS < handle
             fockVecs = obj.fockVectors;
             densVecs = obj.densVectors;
             for i = 1:size(obj.fockVectors, 2)
-                if(norm(fockVecs(:, 1)) == 0)
+                if(norm(densVecs(:, 1)) == 0)
                     newDensVector = obj.densVectors(:, end);
                     return;
                 end
@@ -72,10 +72,10 @@ classdef ComDIIS < handle
             iniCoeffs = zeros(nVecs, 1);
             iniCoeffs(end) = 1;
             
-            options = optimoptions(@fmincon, 'Display', 'off', 'GradObj', 'off', 'Algorithm', 'active-set', 'TolFun', 1e-6, 'TolCon', 1e-6);
+            options = optimoptions(@fmincon, 'Display', 'off', 'GradObj', 'on', 'TolFun', 1e-14, 'TolCon', 1e-14);
             finalCoeffs = fmincon(@(coeffs)Target(coeffs, H), ...
                 iniCoeffs, [], [], ones(1, length(iniCoeffs)), 1, [], [], [], options);
-            
+            disp(finalCoeffs)
             newDensVector = densVecs * finalCoeffs;
         end
         
