@@ -10,8 +10,8 @@ densVec = iniDensVec;
 elecEnergy = 0;
 
 % diis adiis
-comdiis = ComDIIS(obj.overlapMat);
-cdiis = CDIIS(obj.overlapMat);
+comdiis = ComDIIS(obj.overlapMat, 5);
+% cdiis = CDIIS(obj.overlapMat);
 
 for iter = 1:obj.maxSCFIter
     oldDensVec = densVec;
@@ -21,7 +21,7 @@ for iter = 1:obj.maxSCFIter
     
     % diis extrapolate Fock matrix
     comdiis.Push(fockVec, densVec); % density must be idempotent
-    cdiis.Push(fockVec, densVec);
+%     cdiis.Push(fockVec, densVec);
     densVec = comdiis.ExtrapolateDensity();
     
     fockVec = oeiVec + reshape(obj.DensToG(reshape(densVec, nbf, [])), [], 1);

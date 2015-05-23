@@ -39,8 +39,16 @@ classdef ComDIIS < handle
                 if(norm(densVecs(:, 1)) == 0)
                     newDensVector = obj.densVectors(:, end);
                     return;
+                    
+%                     densVecs = densVecs(:, 2:end);
+%                     fockVecs = fockVecs(:, 2:end);
                 end
             end
+            
+%             if(size(densVecs, 2) < 2)
+%                 newDensVector = obj.densVectors(:, end);
+%                 return;
+%             end
             
             
             nbf = sqrt(size(fockVecs, 1));
