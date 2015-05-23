@@ -18,8 +18,8 @@ refDensVecSet = refDensVecSet(:, 1:stepSize:end);
 
 
 trainedLevels = {};
-% maxLevel = size(refDensVecSet, 2) - 1;
-maxLevel = 7;
+maxLevel = size(refDensVecSet, 2) - 2;
+% maxLevel = 7;
 for level = 1:maxLevel
     trainedLevels{level}.coeffs = {};
     trainedLevels{level}.densVecSet = zeros(size(densVecSet, 1), 0);

@@ -15,5 +15,12 @@ finalDensVec = rhfTrain.densVec;
 disp([ener, iter]);
 
 
-[ener3, iter3] = rhfTrain.CheatSCF2(finalDensVec, iniDensVec);
+molTest = mol3;
+matpsiTest = MatPsi2(molTest.cartesian, basisSet);
+rhfTest = RHF.MatPsi2Interface(matpsiTest);
+
+randMat = rand(sqrt(numel(finalDensVec))) - 0.5;
+randMat = randMat + randMat';
+randVec = 0.1 .* reshape(randMat, [], 1);
+[ener3, iter3] = rhfTrain.SCF(finalDensVec + randVec);
 disp([ener3, iter3]);

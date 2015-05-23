@@ -1,6 +1,6 @@
-function [hfEnergy, densVecSet, refDensVecSet, iter] = ExpertSCF(obj, iniDensVec)
+function [hfEnergy, iter] = CheatSCF2(obj, finalDensVec, iniDensVec)
 nbf = size(obj.overlapMat, 1);
-if(nargin < 2)
+if(nargin < 3)
     iniDensVec = zeros(nbf^2, 1);
 end
 oeiVec = reshape(obj.coreHamilt, [], 1);
@@ -10,20 +10,15 @@ densVec = iniDensVec;
 elecEnergy = 0;
 
 % diis adiis
-cdiis = CDIIS(obj.overlapMat);
-
-densVecSet = densVec;
-refDensVecSet = zeros(length(densVec), 0);
+cheatdiis = CheatDIIS(finalDensVec);
 
 for iter = 1:obj.maxSCFIter
     oldDensVec = densVec;
     oldElecEnergy = elecEnergy;
-    fockVec = oeiVec + reshape(obj.DensToG(reshape(densVec, nbf, [])), [], 1);
     
     % diis extrapolate Fock matrix
-    cdiis.Push(fockVec, densVec); % density must be idempotent
-    densVec = cdiis.ExtrapolateDensity();
-    refDensVecSet(:, iter) = densVec;
+    cheatdiis.Push(densVec); % density must be idempotent
+    densVec = cheatdiis.ExtrapolateDensity();
     
     fockVec = oeiVec + reshape(obj.DensToG(reshape(densVec, nbf, [])), [], 1);
     
@@ -31,9 +26,6 @@ for iter = 1:obj.maxSCFIter
         = obj.DiagonalizeFock(reshape(fockVec, nbf, []), ...
         inv_S_Half);
     elecEnergy = oeiVec'*densVec + elecEnergy;
-    
-    % collection of densities
-    densVecSet(:, iter+1) = densVec;
     
     if(sqrt(mean((densVec - oldDensVec).^2)) < obj.RMSDensityThreshold ...
             && max(abs(densVec - oldDensVec)) < obj.MaxDensityThreshold ...
@@ -46,5 +38,17 @@ hfEnergy = elecEnergy + obj.nucRepEnergy;
 obj.orbital = orbital;
 obj.densVec = densVec;
 
+end
+
+
+function [densityVec, elecEnergy, orbital, orbEigValues] ...
+    = DiagonalizeFock(fockMat, inv_S_Half, numElectrons)
+[orbitalOtho, orbEigValues] = eig(inv_S_Half*fockMat*inv_S_Half);
+[orbEigValues, ascend_order] = sort(diag(orbEigValues));
+orbital = inv_S_Half * orbitalOtho(:, ascend_order);
+densityVec = reshape( ...
+    orbital(:, 1:numElectrons/2) * orbital(:, 1:numElectrons/2)', ...
+    [], 1);
+elecEnergy = sum(orbEigValues(1:numElectrons/2));
 end
 

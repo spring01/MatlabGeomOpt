@@ -16,7 +16,8 @@ densVecSet = densVec;
 
 stepCoeffs{1} = 1;
 for step = 2:length(trainedLevels)
-    stepCoeffs{step} = trainedLevels{step-1}.coeffs{step};
+%     stepCoeffs{step} = trainedLevels{step-1}.coeffs{step};
+    stepCoeffs{step} = trainedLevels{1}.coeffs{step};
 end
 
 for iter = 1:obj.maxSCFIter

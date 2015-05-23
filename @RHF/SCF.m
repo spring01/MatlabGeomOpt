@@ -13,16 +13,17 @@ elecEnergy = 0;
 cdiis = CDIIS(obj.overlapMat);
 
 for iter = 1:obj.maxSCFIter
+    oldDensVec = densVec;
+    oldElecEnergy = elecEnergy;
+    
     fockVec = oeiVec + reshape(obj.DensToG(reshape(densVec, nbf, [])), [], 1);
-        
+    
     % diis extrapolate Fock matrix
     cdiis.Push(fockVec, densVec); % density must be idempotent
     densVec = cdiis.ExtrapolateDensity();
     
     fockVec = oeiVec + reshape(obj.DensToG(reshape(densVec, nbf, [])), [], 1);
     
-    oldDensVec = densVec;
-    oldElecEnergy = elecEnergy;
     [densVec, elecEnergy, orbital] ...
         = obj.DiagonalizeFock(reshape(fockVec, nbf, []), ...
         inv_S_Half);

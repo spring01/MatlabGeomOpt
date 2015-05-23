@@ -1,6 +1,6 @@
 classdef CDIIS < handle
     
-    properties (Access = private)
+    properties %(Access = private)
         
         fockVectors;
         errorCommutatorVectors;
@@ -87,20 +87,14 @@ classdef CDIIS < handle
             hessian = [ ...
                 obj.errorCommutatorVectors'*obj.errorCommutatorVectors, onesVec; ...
                 onesVec', 0];
-            useIndices = 1:obj.NumVectors();
-            for i = 1:obj.NumVectors()-1
-                if(rcond(hessian(1:end-1,1:end-1)) > 1e-15 && rcond(hessian) > 1e-15)
-%                     break;
-                    diisCoefficients = hessian \ [zeros(length(useIndices),1); 1];
-                    newDensVector = obj.densVectors(:,useIndices) ...
-                        * diisCoefficients(1:end-1);
-                    return;
-                else
-                    hessian = hessian(2:end, 2:end);
-                    useIndices = useIndices(2:end);
-                end
+            if(rcond(hessian(1:end-1,1:end-1)) > 1e-15 && rcond(hessian) > 1e-15)
+                diisCoefficients = hessian \ [zeros(obj.NumVectors(),1); 1];
+                newDensVector = obj.densVectors ...
+                    * diisCoefficients(1:end-1);
+            else
+                newDensVector = obj.densVectors(:,end);
             end
-            newDensVector = obj.densVectors(:,end);
+            
 %             diisCoefficients = hessian \ [zeros(length(useIndices),1); 1];
 %             newDensVector = obj.densVectors(:,useIndices) ...
 %                 * diisCoefficients(1:end-1);

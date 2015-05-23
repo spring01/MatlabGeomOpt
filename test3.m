@@ -1,6 +1,6 @@
-load geomOptMolsBig.mat
+load geomOptMols.mat
 
-basisSet = 'sto-3g';
+basisSet = '6-31++g**';
 
 molIni = mol1;
 matpsiIni = MatPsi2(molIni.cartesian, basisSet);
@@ -21,12 +21,12 @@ trainedLevels = rhfTrain.TrainDAgger2(densVecSet, refDensVecSet);
 disp([ener2, iter2]);
 
 
-
+iniDensVec2 = rhfTrain.densVec;
 molTest = mol3;
 matpsiTest = MatPsi2(molTest.cartesian, basisSet);
 rhfTest = RHF.MatPsi2Interface(matpsiTest);
-[ener3, iter3] = rhfTest.SCF(iniDensVec);
+[ener3, iter3] = rhfTest.SCF(iniDensVec2);
 disp([ener3, iter3]);
-[ener4, iter4] = rhfTest.TestDAggerSCF(trainedLevels, iniDensVec);
+[ener4, iter4] = rhfTest.TestDAggerSCF(trainedLevels, iniDensVec2);
 disp([ener4, iter4]);
 
