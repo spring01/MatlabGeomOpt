@@ -126,10 +126,26 @@ classdef ComDIIS < handle
             iniCoeffs = zeros(nVecs, 1);
             iniCoeffs(end) = 1;
             
-            options = optimoptions(@fmincon, 'Display', 'off', 'GradObj', 'on', 'TolFun', 1e-14, 'TolCon', 1e-14);
-            finalCoeffs = fmincon(@(coeffs)Target(coeffs, H), ...
-                iniCoeffs, [], [], ones(1, length(iniCoeffs)), 1, [], [], [], options);
+%             options = optimoptions(@fmincon, 'Display', 'off', 'GradObj', 'on', 'TolFun', 1e-14, 'TolCon', 1e-14);
+%             finalCoeffs = fmincon(@(coeffs)Target(coeffs, H), ...
+%                 iniCoeffs, [], [], ones(1, length(iniCoeffs)), 1, [], [], [], options);
 %             disp(finalCoeffs)
+            
+            coeffs = iniCoeffs;
+            for iter = 1:10
+                [val, grad, hess] = Target(coeffs, H);
+                lambda = -4 * val;
+                gradL = [grad + lambda; 0];
+                if(norm(gradL) < eps)
+                    break;
+                end
+                onesVec = ones(length(coeffs), 1);
+                hessL = [hess, onesVec; onesVec', 0];
+                coeffsAndLambda = [coeffs; lambda];
+                coeffsAndLambda = coeffsAndLambda - hessL \ gradL;
+                coeffs = coeffsAndLambda(1:end-1);
+            end
+            finalCoeffs = coeffs;
             newFockVector = fockVecs * finalCoeffs;
         end
         

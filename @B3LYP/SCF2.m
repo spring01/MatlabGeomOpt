@@ -13,6 +13,7 @@ elecEnergy = 0;
 comdiis = ComDIIS(obj.overlapMat, 4);
 % cdiis = CDIIS(obj.overlapMat);
 
+obj.energySet = [];
 for iter = 1:obj.maxSCFIter
     oldDensVec = densVec;
     oldElecEnergy = elecEnergy;
