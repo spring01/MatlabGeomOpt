@@ -62,24 +62,19 @@ classdef CDIIS < handle
             end
         end
         
-%         function newFockVector = Extrapolate(obj)
-%             onesVec = ones(obj.NumVectors(),1);
-%             hessian = [ ...
-%                 obj.errorCommutatorVectors'*obj.errorCommutatorVectors, onesVec; ...
-%                 onesVec', 0];
-%             useFockIndices = 1:obj.NumVectors();
-%             for i = 1:obj.NumVectors()-1
-%                 if(rcond(hessian) > 1e-15)
-%                     break;
-%                 else
-%                     hessian = hessian(2:end, 2:end);
-%                     useFockIndices = useFockIndices(2:end);
-%                 end
-%             end
-%             diisCoefficients = hessian \ [zeros(length(useFockIndices),1); 1];
-%             newFockVector = obj.fockVectors(:,useFockIndices) ...
-%                 * diisCoefficients(1:end-1);
-%         end
+        function newFockVector = Extrapolate(obj)
+            onesVec = ones(obj.NumVectors(),1);
+            hessian = [ ...
+                obj.errorCommutatorVectors'*obj.errorCommutatorVectors, onesVec; ...
+                onesVec', 0];
+            if(rcond(hessian(1:end-1,1:end-1)) > 1e-15 && rcond(hessian) > 1e-15)
+                diisCoefficients = hessian \ [zeros(obj.NumVectors(),1); 1];
+                newFockVector = obj.fockVectors ...
+                    * diisCoefficients(1:end-1);
+            else
+                newFockVector = obj.fockVectors(:,end);
+            end
+        end
         
         %
         function newDensVector = ExtrapolateDensity(obj)

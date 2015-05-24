@@ -83,8 +83,54 @@ classdef ComDIIS < handle
             options = optimoptions(@fmincon, 'Display', 'off', 'GradObj', 'on', 'TolFun', 1e-14, 'TolCon', 1e-14);
             finalCoeffs = fmincon(@(coeffs)Target(coeffs, H), ...
                 iniCoeffs, [], [], ones(1, length(iniCoeffs)), 1, [], [], [], options);
-            disp(finalCoeffs)
+%             disp(finalCoeffs)
             newDensVector = densVecs * finalCoeffs;
+        end
+        
+        function newFockVector = Extrapolate(obj)
+            fockVecs = obj.fockVectors;
+            densVecs = obj.densVectors;
+            for i = 1:size(obj.fockVectors, 2)
+                if(norm(densVecs(:, 1)) == 0)
+                    newFockVector = obj.fockVectors(:, end);
+                    return;
+                end
+            end
+            
+            nbf = sqrt(size(fockVecs, 1));
+            nVecs = size(fockVecs, 2);
+            
+            e = cell(nVecs, nVecs);
+            for i = 1:nVecs
+                for j = 1:nVecs
+                    fock_i = reshape(fockVecs(:, i), nbf, []);
+                    dens_j = reshape(densVecs(:, j), nbf, []);
+                    FtDt = obj.S_Half \ (fock_i * dens_j) * obj.S_Half;
+                    e{i, j} = FtDt - FtDt';
+                end
+            end
+            
+            H = zeros(nVecs, nVecs, nVecs, nVecs);
+            
+            
+            for i = 1:nVecs
+                for j = 1:nVecs
+                    for k = 1:nVecs
+                        for l = 1:nVecs
+                            H(i,j,k,l) = sum(sum(e{i, j} .* e{k, l}));
+                        end
+                    end
+                end
+            end
+            
+            iniCoeffs = zeros(nVecs, 1);
+            iniCoeffs(end) = 1;
+            
+            options = optimoptions(@fmincon, 'Display', 'off', 'GradObj', 'on', 'TolFun', 1e-14, 'TolCon', 1e-14);
+            finalCoeffs = fmincon(@(coeffs)Target(coeffs, H), ...
+                iniCoeffs, [], [], ones(1, length(iniCoeffs)), 1, [], [], [], options);
+%             disp(finalCoeffs)
+            newFockVector = fockVecs * finalCoeffs;
         end
         
     end

@@ -10,7 +10,7 @@ densVec = iniDensVec;
 elecEnergy = 0;
 
 % diis adiis
-cdiis = CDIIS(obj.overlapMat);
+cdiis = CDIIS(obj.overlapMat, 4);
 
 for iter = 1:obj.maxSCFIter
     oldDensVec = densVec;

@@ -1,4 +1,4 @@
-classdef RHF < handle
+classdef B3LYP < handle
     
     properties (SetAccess = protected)
         
@@ -6,6 +6,8 @@ classdef RHF < handle
         densVec;
         
         finalFockVec;
+        
+        energySet;
         
     end
     
@@ -22,14 +24,17 @@ classdef RHF < handle
         MaxDensityThreshold = 1e-1;
         EnergyThreshold = 1e-6;
         
+        currentV;
+        
     end
     
     methods
         
-        function obj = RHF(properties)
+        function obj = B3LYP(properties)
             obj.overlapMat = properties.overlapMat;
             obj.coreHamilt = properties.coreHamilt;
             obj.matpsi2 = properties.matpsi2;
+            obj.matpsi2.DFT_Initialize('b3lyp');
             obj.nucRepEnergy = properties.nucRepEnergy;
             obj.numElectrons = properties.numElectrons;
         end
@@ -38,9 +43,11 @@ classdef RHF < handle
     
     methods (Access = protected)
         
-        function gMat = DensToG(obj, densMat)
-            gMat = 2 .* obj.matpsi2.JK_DensToJ(densMat) ... % +2J
-                - obj.matpsi2.JK_DensToK(densMat); % -K
+        function gMat = DensToG(obj, dens)
+            obj.currentV = obj.matpsi2.DFT_DensToV(dens);
+            gMat = 2 .* obj.matpsi2.JK_DensToJ(dens) ...
+                - 0.2 .* obj.matpsi2.JK_DensToK(dens) ...
+                + obj.currentV;
         end
         
         function [densVec, elecEnergy, orbital, orbEigValues] ...
@@ -57,13 +64,13 @@ classdef RHF < handle
     
     methods (Static)
                 
-        function rhf = MatPsi2Interface(matpsi2)
+        function obj = MatPsi2Interface(matpsi2)
             properties.overlapMat = matpsi2.Integrals_Overlap();
             properties.coreHamilt = matpsi2.Integrals_Kinetic() + matpsi2.Integrals_Potential();
             properties.matpsi2 = matpsi2;
             properties.nucRepEnergy = matpsi2.Molecule_NucRepEnergy();
             properties.numElectrons = matpsi2.Molecule_NumElectrons();
-            rhf = RHF(properties);
+            obj = B3LYP(properties);
         end
         
     end

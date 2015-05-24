@@ -10,9 +10,9 @@ iniDensVec = reshape(matpsiIni.SCF_DensityAlpha(), [], 1);
 molTrain = mol2;
 matpsiTrain = MatPsi2(molTrain.cartesian, basisSet);
 rhfTrain = RHF.MatPsi2Interface(matpsiTrain);
-[ener, iter] = rhfTrain.SCF(iniDensVec);
+[ener, iter] = rhfTrain.SCF();
 finalDensVec = rhfTrain.densVec;
 disp([ener, iter]);
 
-[ener2, iter2] = rhfTrain.SCF2(iniDensVec);
+[ener2, iter2] = rhfTrain.SCF2();
 disp([ener2, iter2]);
