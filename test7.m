@@ -37,15 +37,22 @@ end
 iniCoeffs = [0 0 0 0 1]';
 % iniCoeffs = iniCoeffs ./ norm(iniCoeffs);
 
-options = optimoptions(@fmincon, 'Display', 'iter', 'GradObj', 'on');
-finalCoeffs = fmincon(@(coeffs)Target(coeffs, H), ...
-    iniCoeffs, [], [], ones(1, length(iniCoeffs)), 1, [], [], [], options);
-
-finalCoeffs
+% options = optimoptions(@fmincon, 'Display', 'iter', 'GradObj', 'on');
+% finalCoeffs = fmincon(@(coeffs)Target(coeffs, H), ...
+%     iniCoeffs, [], [], ones(1, length(iniCoeffs)), 1, [], [], [], options);
+% 
+% finalCoeffs
 
 
 
 coeffs = iniCoeffs;
+
+% coeffs = (rand(5,1));
+% coeffs = coeffs ./ sum(coeffs);
+% [val, grad, hess] = Target(coeffs, H);
+% onesVec = ones(length(coeffs), 1);
+% hessL = [hess, onesVec; onesVec', 0];
+% eig(hessL)
 
 for iter = 1:10
 [val, grad, hess] = Target(coeffs, H);

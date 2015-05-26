@@ -38,6 +38,8 @@ for iter = 1:obj.maxSCFIter
             && abs(elecEnergy - oldElecEnergy) < obj.EnergyThreshold)
         break;
     end
+    
+    disp(iter)
 end
 hfEnergy = elecEnergy + obj.nucRepEnergy;
 

@@ -71,6 +71,8 @@ classdef CDIIS < handle
                 diisCoefficients = hessian \ [zeros(obj.NumVectors(),1); 1];
                 newFockVector = obj.fockVectors ...
                     * diisCoefficients(1:end-1);
+                
+%                 disp(diisCoefficients(1:end-1));
             else
                 newFockVector = obj.fockVectors(:,end);
             end

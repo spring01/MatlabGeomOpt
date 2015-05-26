@@ -39,6 +39,7 @@ for iter = 1:obj.maxSCFIter
         break;
     end
     
+    disp(iter)
 end
 hfEnergy = elecEnergy + obj.nucRepEnergy;
 

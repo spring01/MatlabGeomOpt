@@ -7,6 +7,8 @@ classdef RHF < handle
         
         finalFockVec;
         
+        energySet;
+        
     end
     
     properties (Access = protected)

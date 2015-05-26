@@ -1,0 +1,14 @@
+%chk=Z:\home\haichen\working\GeomOpt\cdh2.chk
+# hf/3-21g geom=connectivity
+
+Title Card Required
+
+0 1
+ Cd                -0.87025257    2.32761904    0.22008767
+ H                  0.83974743    2.32761904    0.22008767
+ H                 -2.58025257    2.32761904    0.22008767
+
+ 1 2 1.0 3 1.0
+ 2
+ 3
+

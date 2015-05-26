@@ -147,6 +147,8 @@ classdef ComDIIS < handle
             end
             finalCoeffs = coeffs;
             newFockVector = fockVecs * finalCoeffs;
+            
+%             disp(finalCoeffs);
         end
         
     end
